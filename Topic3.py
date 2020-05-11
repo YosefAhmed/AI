@@ -97,15 +97,42 @@ class SearchAlgorithms:
 
         # print maze with edge costs
         self.PrintMaze(self.maze, self.edgeCosts)
+
         # create array of nodes
+        # print(len(self.maze[0]))
         for i in range(len(self.maze)):
             for j in range(len(self.maze[0])):
-                self.nodes.append(Node(self.maze[i][j], i*len(self.maze[0])+j, self.maze[i-1][j]), self.maze[i+1][j],
-                                  self.maze[i][j-1], self.maze[i][j+1], None, self.edgeCosts[i][j], None, self.Heuristic(j,i), None )
+
+                #---------- if current node has no neighbours-----------
+                if i == 0:
+                    up = None
+                else:
+                    up =  (i-1)*len(self.maze[0])+j #self.maze[i - 1][j]
+
+                if i == len(self.maze)-1:
+                    down = None
+                else:
+                    down = (i+1)*len(self.maze[0])+j  #self.maze[i+1][j]
+
+                if j == 0:
+                    left = None
+                else:
+                    left = i*len(self.maze[0])+(j-1) # self.maze[i][j - 1]
+
+                if j == len(self.maze[0])-1:
+                    right = None
+                else:
+                    right = i*len(self.maze[0])+(j+1)  #self.maze[i][j+1]
+                #----------End of if current node has no neighbours-----------
+
+                #fill array of nodes
+                self.nodes.append(Node(self.maze[i][j], i*len(self.maze[0])+j, up, down, left, right,
+                                       None, self.edgeCosts[i][j], None, self.Heuristic(j,i), None ))
 
 
     def AstarManhattanHeuristic(self):
-        self.open.append(self.maze[0][0])
+        self.open.append(self.nodes[0])
+       # print (self.nodes[1].up)
         return self.fullPath, self.path, self.totalCost
 
     # ------------Main class properties and functions  ---------------------
