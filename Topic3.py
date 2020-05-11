@@ -8,6 +8,7 @@ from random import randrange
 from csv import reader
 from math import sqrt
 import random
+import sys
 r = random.Random()
 r.seed("AI")
 
@@ -45,16 +46,16 @@ class Stack:
 
 
 class Node:
-    id = None
-    up = None
-    down = None
-    left = None
-    right = None
-    previousNode = None
-    edgeCost = None
-    gOfN = None  # total edge cost
-    hOfN = None  # heuristic value
-    heuristicFn = None
+    id =0# None
+    up =0# None
+    down =0# None
+    left = 0#None
+    right = 0#None
+    previousNode = 0#None
+    edgeCost = 0#None
+    gOfN = 0#None  # total edge cost
+    hOfN = 0#None  # heuristic value
+    heuristicFn = 0#None
 
     def __init__(self, value, id, up, down, left, right, prevNode, edgeCost, gOfN, hOfN,fOfN):
         self.value = value
@@ -79,7 +80,7 @@ class SearchAlgorithms:
     maze = None #2D array represents the maze
     edgeCosts = None #2D array represents the edge costs
     nodes = [] #array of nodes
-    goalNode = None
+    goalNode = None #[value, X, Y]
     open = []
     close = []
    #------------Main class properties and functions  ---------------------
@@ -127,17 +128,62 @@ class SearchAlgorithms:
 
                 #fill array of nodes
                 self.nodes.append(Node(self.maze[i][j], i*len(self.maze[0])+j, up, down, left, right,
-                                       None, self.edgeCosts[i][j], None, self.Heuristic(j,i), None ))
+                                       -1, self.edgeCosts[i][j], 0, self.Heuristic(j,i), sys.maxsize ))
 
 
     def AstarManhattanHeuristic(self):
+        self.nodes[0].heuristicFn = self.nodes[0].hOfN + self.nodes[0].gOfN
         self.open.append(self.nodes[0])
-       # print (self.nodes[1].up)
+        prev = None
+        while len(self.open) != 0:
+            self.open.sort(key= lambda node: node.heuristicFn)
+            currentNode = self.open.pop(0)
+            if prev is not None and currentNode.id < prev.id:
+                if currentNode.previousNode is not prev.id:
+                    while currentNode.previousNode is not prev.previousNode:
+                       prev = self.close.pop()
+            if currentNode.up != None:
+                if(currentNode.heuristicFn < self.nodes[currentNode.up].heuristicFn):
+                    self.nodes[currentNode.up].previousNode = currentNode.id
+                    self.nodes[currentNode.up].gOfN = currentNode.gOfN +  self.nodes[currentNode.up].edgeCost
+                    self.nodes[currentNode.up].heuristicFn = self.nodes[currentNode.up].gOfN + self.nodes[currentNode.up].hOfN
+                    self.open.append(self.nodes[currentNode.up])
+            if currentNode.down != None:
+                if (currentNode.heuristicFn < self.nodes[currentNode.down].heuristicFn):
+                    self.nodes[currentNode.down].previousNode = currentNode.id
+                    self.nodes[currentNode.down].gOfN =  self.nodes[currentNode.down].edgeCost + currentNode.gOfN
+                    self.nodes[currentNode.down].heuristicFn = self.nodes[currentNode.down].gOfN + self.nodes[currentNode.down].hOfN
+                    self.open.append(self.nodes[currentNode.down])
+            if currentNode.left != None:
+                if (currentNode.heuristicFn < self.nodes[currentNode.left].heuristicFn):
+                    self.nodes[currentNode.left].previousNode = currentNode.id
+                    self.nodes[currentNode.left].gOfN = currentNode.gOfN +  self.nodes[currentNode.left].edgeCost
+                    self.nodes[currentNode.left].heuristicFn = self.nodes[currentNode.left].gOfN + self.nodes[currentNode.left].hOfN
+                    self.open.append(self.nodes[currentNode.left])
+            if currentNode.right != None:
+                if (currentNode.heuristicFn < self.nodes[currentNode.right].heuristicFn):
+                    self.nodes[currentNode.right].previousNode = currentNode.id
+                    self.nodes[currentNode.right].gOfN = currentNode.gOfN +  self.nodes[currentNode.right].edgeCost
+                    self.nodes[currentNode.right].heuristicFn = self.nodes[currentNode.right].gOfN + self.nodes[currentNode.right].hOfN
+                    self.open.append(self.nodes[currentNode.right])
+
+            self.close.append(currentNode)
+            if currentNode.value == self.goalNode[0]:
+                for obj in self.open:
+                    self.fullPath.append(obj.id)#[obj.id,obj.heuristicFn])
+                for obj in self.close:
+                    self.path.append(obj.id)#[obj.id,obj.heuristicFn])
+                self.totalCost = currentNode.gOfN
+                break
+
+            prev = currentNode
+        # print (self.nodes[0].hOfN)
+
         return self.fullPath, self.path, self.totalCost
 
     # ------------Main class properties and functions  ---------------------
     def Heuristic(self, x, y):
-        return (abs(x-self.goalNode[0])+abs(y-self.goalNode[1]))
+        return (abs(x-self.goalNode[1])+abs(y-self.goalNode[2]))
 
     def PrintMaze(self, maze, edgeCosts):
         # print maze with edge costs
@@ -151,7 +197,7 @@ class SearchAlgorithms:
 
                 print(" ", maze[y][x], " ", end=" ")
                 if maze[y][x] == "E":
-                    self.goalNode = [x, y]
+                    self.goalNode = ["E",x, y]
             print()
 
 
@@ -358,6 +404,9 @@ def GeneticAlgorithm_Main():
 # endregion
 ######################## MAIN ###########################33
 if __name__ == '__main__':
+    # tmp = [0,15,2,3,2,100]
+    # tmp.pop(1)
+    # print (tmp)
     SearchAlgorithm_Main()
     # KNN_Main()
     # GeneticAlgorithm_Main()
