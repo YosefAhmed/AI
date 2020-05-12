@@ -95,9 +95,12 @@ class SearchAlgorithms:
         the leftmost node'''
         self.maze = [j.split(',') for j in mazeStr.split(' ')]
         self.edgeCosts = [[edgeCost[i * len(self.maze[0]) + j] for j in range(len(self.maze[0]))] for i in range(len(self.maze))]
-
+        for y in range(len(self.maze)):
+            for x in range(len(self.maze[0])):
+                if self.maze[y][x] == "E":
+                    self.goalNode = ["E",x, y]
         # print maze with edge costs
-        self.PrintMaze(self.maze, self.edgeCosts)
+        # self.PrintMaze(self.maze, self.edgeCosts)
 
         # create array of nodes
         # print(len(self.maze[0]))
@@ -168,9 +171,11 @@ class SearchAlgorithms:
                     self.open.append(self.nodes[currentNode.right])
 
             self.close.append(currentNode)
+            self.fullPath.append(currentNode.id)
             if currentNode.value == self.goalNode[0]:
-                for obj in self.open:
-                    self.fullPath.append(obj.id)#[obj.id,obj.heuristicFn])
+                # for obj in self.open:
+                #     self.fullPath.append(obj.id)#[obj.id,obj.heuristicFn])
+                # print (self.fullPath)
                 for obj in self.close:
                     self.path.append(obj.id)#[obj.id,obj.heuristicFn])
                 self.totalCost = currentNode.gOfN
@@ -185,21 +190,21 @@ class SearchAlgorithms:
     def Heuristic(self, x, y):
         return (abs(x-self.goalNode[1])+abs(y-self.goalNode[2]))
 
-    def PrintMaze(self, maze, edgeCosts):
-        # print maze with edge costs
-        for y in range(len(maze)):
-            for x in range(len(maze[0])):
-                print("(", edgeCosts[y][x], ")", end = "")
-
-            print()
-
-            for x in range(len(maze[0])):
-
-                print(" ", maze[y][x], " ", end=" ")
-                if maze[y][x] == "E":
-                    self.goalNode = ["E",x, y]
-            print()
-
+    # def PrintMaze(self, maze, edgeCosts):
+    #     # print maze with edge costs
+    #     for y in range(len(maze)):
+    #         for x in range(len(maze[0])):
+    #             print("(", edgeCosts[y][x], ")", end = "")
+    #
+    #         print()
+    #
+    #         for x in range(len(maze[0])):
+    #
+    #             print(" ", maze[y][x], " ", end=" ")
+    #             if maze[y][x] == "E":
+    #                 self.goalNode = ["E",x, y]
+    #         print()
+    #
 
 # endregion
 
@@ -404,9 +409,6 @@ def GeneticAlgorithm_Main():
 # endregion
 ######################## MAIN ###########################33
 if __name__ == '__main__':
-    # tmp = [0,15,2,3,2,100]
-    # tmp.pop(1)
-    # print (tmp)
     SearchAlgorithm_Main()
     # KNN_Main()
     # GeneticAlgorithm_Main()
