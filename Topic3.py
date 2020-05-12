@@ -46,16 +46,16 @@ class Stack:
 
 
 class Node:
-    id =0# None
-    up =0# None
-    down =0# None
-    left = 0#None
-    right = 0#None
-    previousNode = 0#None
-    edgeCost = 0#None
-    gOfN = 0#None  # total edge cost
-    hOfN = 0#None  # heuristic value
-    heuristicFn = 0#None
+    id =-1
+    up =-1
+    down =-1
+    left = -1
+    right = -1
+    previousNode = -1
+    edgeCost = -1
+    gOfN = -1 # total edge cost
+    hOfN = -1 # heuristic value
+    heuristicFn = -1
 
     def __init__(self, value, id, up, down, left, right, prevNode, edgeCost, gOfN, hOfN,fOfN):
         self.value = value
@@ -77,9 +77,9 @@ class SearchAlgorithms:
         * You can add ANY extra functions,
           classes you need as long as the main
           structure is left as is '''
-    maze = None #2D array represents the maze
     edgeCosts = None #2D array represents the edge costs
     nodes = [] #array of nodes
+    startNode = None #[value, X, Y]
     goalNode = None #[value, X, Y]
     open = []
     close = []
@@ -89,122 +89,201 @@ class SearchAlgorithms:
     totalCost = None
 
     def __init__(self, mazeStr,edgeCost = None):
-        ''' mazeStr contains the full board
-         The board is read row wise,
-        the nodes are numbered 0-based starting
-        the leftmost node'''
-        self.maze = [j.split(',') for j in mazeStr.split(' ')]
-        self.edgeCosts = [[edgeCost[i * len(self.maze[0]) + j] for j in range(len(self.maze[0]))] for i in range(len(self.maze))]
-        for y in range(len(self.maze)):
-            for x in range(len(self.maze[0])):
-                if self.maze[y][x] == "E":
-                    self.goalNode = ["E",x, y]
-        # print maze with edge costs
-        # self.PrintMaze(self.maze, self.edgeCosts)
+        column = mazeStr.split(' ')
+        for i in range(len(column)):
+            self.nodes.append([])
+            row = column[i].split(',')
+        # -- finding startNode and endNode --
+            if self.startNode is None:
+                self.GetStartAndGoal(mazeStr.index('S'),mazeStr.index('E'), len(column), len(column[0]), mazeStr)
+        # ------------------------------------------------------------------------
+            for j in range(len(row)):
 
-        # create array of nodes
-        # print(len(self.maze[0]))
-        for i in range(len(self.maze)):
-            for j in range(len(self.maze[0])):
+                self.nodes[i].append(Node(row[j], i*len(row)+j, None, None, None, None,
+                                 -1, -1, 0, self.Heuristic(j,i), sys.maxsize ))
 
-                #---------- if current node has no neighbours-----------
-                if i == 0:
-                    up = None
-                else:
-                    up =  (i-1)*len(self.maze[0])+j #self.maze[i - 1][j]
+                #edge cost
+                self.nodes[i][j].edgeCost = edgeCost[i*len(row)+j]
+                #left
+                if j is not 0:
+                   self.nodes[i][j].left = [i, j-1]
+                #right
+                if j is not len(row)-1:
+                    self.nodes[i][j].right = [i, j+1]
+                #up
+                if i is not 0:
+                    self.nodes[i][j].up = [i-1, j]
 
-                if i == len(self.maze)-1:
-                    down = None
-                else:
-                    down = (i+1)*len(self.maze[0])+j  #self.maze[i+1][j]
-
-                if j == 0:
-                    left = None
-                else:
-                    left = i*len(self.maze[0])+(j-1) # self.maze[i][j - 1]
-
-                if j == len(self.maze[0])-1:
-                    right = None
-                else:
-                    right = i*len(self.maze[0])+(j+1)  #self.maze[i][j+1]
-                #----------End of if current node has no neighbours-----------
-
-                #fill array of nodes
-                self.nodes.append(Node(self.maze[i][j], i*len(self.maze[0])+j, up, down, left, right,
-                                       -1, self.edgeCosts[i][j], 0, self.Heuristic(j,i), sys.maxsize ))
-
+                    #down
+                    self.nodes[i-1][j].down = [i,j]
 
     def AstarManhattanHeuristic(self):
-        self.nodes[0].heuristicFn = self.nodes[0].hOfN + self.nodes[0].gOfN
-        self.open.append(self.nodes[0])
-        prev = None
-        while len(self.open) != 0:
-            self.open.sort(key= lambda node: node.heuristicFn)
-            currentNode = self.open.pop(0)
-            if prev is not None and currentNode.id < prev.id:
-                if currentNode.previousNode is not prev.id:
-                    while currentNode.previousNode is not prev.previousNode:
-                       prev = self.close.pop()
-            if currentNode.up != None:
-                if(currentNode.heuristicFn < self.nodes[currentNode.up].heuristicFn):
-                    self.nodes[currentNode.up].previousNode = currentNode.id
-                    self.nodes[currentNode.up].gOfN = currentNode.gOfN +  self.nodes[currentNode.up].edgeCost
-                    self.nodes[currentNode.up].heuristicFn = self.nodes[currentNode.up].gOfN + self.nodes[currentNode.up].hOfN
-                    self.open.append(self.nodes[currentNode.up])
-            if currentNode.down != None:
-                if (currentNode.heuristicFn < self.nodes[currentNode.down].heuristicFn):
-                    self.nodes[currentNode.down].previousNode = currentNode.id
-                    self.nodes[currentNode.down].gOfN =  self.nodes[currentNode.down].edgeCost + currentNode.gOfN
-                    self.nodes[currentNode.down].heuristicFn = self.nodes[currentNode.down].gOfN + self.nodes[currentNode.down].hOfN
-                    self.open.append(self.nodes[currentNode.down])
-            if currentNode.left != None:
-                if (currentNode.heuristicFn < self.nodes[currentNode.left].heuristicFn):
-                    self.nodes[currentNode.left].previousNode = currentNode.id
-                    self.nodes[currentNode.left].gOfN = currentNode.gOfN +  self.nodes[currentNode.left].edgeCost
-                    self.nodes[currentNode.left].heuristicFn = self.nodes[currentNode.left].gOfN + self.nodes[currentNode.left].hOfN
-                    self.open.append(self.nodes[currentNode.left])
-            if currentNode.right != None:
-                if (currentNode.heuristicFn < self.nodes[currentNode.right].heuristicFn):
-                    self.nodes[currentNode.right].previousNode = currentNode.id
-                    self.nodes[currentNode.right].gOfN = currentNode.gOfN +  self.nodes[currentNode.right].edgeCost
-                    self.nodes[currentNode.right].heuristicFn = self.nodes[currentNode.right].gOfN + self.nodes[currentNode.right].hOfN
-                    self.open.append(self.nodes[currentNode.right])
+        #seting start node
+        self.nodes[self.startNode[1]][self.startNode[2]].heuristicFn = \
+            self.nodes[self.startNode[1]][self.startNode[2]].hOfN + self.nodes[self.startNode[1]][self.startNode[2]].gOfN
 
+        #append start node to Open list
+        self.open.append(self.nodes[self.startNode[1]][self.startNode[2]])
+
+        prevNode = None
+        while len(self.open) != 0:
+
+        # -- sorting the Open list ordered by heuristicFn --
+            self.open.sort(key= lambda node: node.heuristicFn)
+
+        # -- pop the least order node to get its neighbours and append it to Close list --
+            currentNode = self.open.pop(0)
+            # ==handel the case of trying a wrong path (if the selected path was blocked)==
+            if prevNode is not None and currentNode.previousNode is not prevNode.id:
+                while currentNode.previousNode is not prevNode.id:
+                    prevNode = self.close.pop()
+            #==============================================================================
+
+        # -- update attributes of neighbours of the current node ( update parent, gOfN, FoFN), and append them to Open list --
+            if currentNode.up != None:
+                up = self.nodes[currentNode.up[0]][currentNode.up[1]]
+                if(currentNode.heuristicFn < up.heuristicFn):
+                    up.previousNode = currentNode.id
+                    up.gOfN = currentNode.gOfN +  up.edgeCost
+                    up.heuristicFn = up.gOfN + up.hOfN
+                    self.open.append(up)
+            if currentNode.down != None:
+                down = self.nodes[currentNode.down[0]][currentNode.down[1]]
+                if (currentNode.heuristicFn < down.heuristicFn):
+                    down.previousNode = currentNode.id
+                    down.gOfN =  down.edgeCost + currentNode.gOfN
+                    down.heuristicFn = down.gOfN + down.hOfN
+                    self.open.append(down)
+            if currentNode.left != None:
+                left = self.nodes[currentNode.left[0]][currentNode.left[1]]
+                if (currentNode.heuristicFn < left.heuristicFn):
+                    left.previousNode = currentNode.id
+                    left.gOfN = currentNode.gOfN +  left.edgeCost
+                    left.heuristicFn = left.gOfN + left.hOfN
+                    self.open.append(left)
+            if currentNode.right != None:
+                right = self.nodes[currentNode.right[0]][currentNode.right[1]]
+                if (currentNode.heuristicFn < right.heuristicFn):
+                    right.previousNode = currentNode.id
+                    right.gOfN = currentNode.gOfN +  right.edgeCost
+                    right.heuristicFn = right.gOfN + right.hOfN
+                    self.open.append(right)
+        # ---------------------------------------------------------------------------------------------------------------------------------
+
+        # -- append the current node to Close list and append its id to the fullPath --
             self.close.append(currentNode)
             self.fullPath.append(currentNode.id)
+
+        # -- if the goal is reached --
             if currentNode.value == self.goalNode[0]:
-                # for obj in self.open:
-                #     self.fullPath.append(obj.id)#[obj.id,obj.heuristicFn])
-                # print (self.fullPath)
                 for obj in self.close:
-                    self.path.append(obj.id)#[obj.id,obj.heuristicFn])
+                    self.path.append(obj.id)
                 self.totalCost = currentNode.gOfN
                 break
 
-            prev = currentNode
+            prevNode = currentNode
         # print (self.nodes[0].hOfN)
-
+        self.PrintMaze(self.nodes)
         return self.fullPath, self.path, self.totalCost
 
     # ------------Main class properties and functions  ---------------------
-    def Heuristic(self, x, y):
-        return (abs(x-self.goalNode[1])+abs(y-self.goalNode[2]))
 
-    # def PrintMaze(self, maze, edgeCosts):
-    #     # print maze with edge costs
-    #     for y in range(len(maze)):
-    #         for x in range(len(maze[0])):
-    #             print("(", edgeCosts[y][x], ")", end = "")
-    #
-    #         print()
-    #
-    #         for x in range(len(maze[0])):
-    #
-    #             print(" ", maze[y][x], " ", end=" ")
-    #             if maze[y][x] == "E":
-    #                 self.goalNode = ["E",x, y]
-    #         print()
-    #
+    def GetStartAndGoal(self, startIndex, goalIndex, columnSize, strRowSize, str):
+
+        startTmpX = startTmpY = goalTmpX = goalTmpY = startNodeX = startNodeY = goalNodeX = goalNodeY = 0
+
+        startNodeY = int(startIndex / (strRowSize+1))
+        goalNodeY = int(goalIndex / (strRowSize+1))
+
+        if startNodeY == 0:
+            for i in range(strRowSize-1):
+                if str[i] == 'S':
+                    startNodeX = startTmpX
+                    break
+                startTmpX+=1
+        else:
+            for i in range(startNodeY*(strRowSize+1), startNodeY*strRowSize + (strRowSize+1)):
+                k = str[i]
+                if str[i] == 'S':
+                    startNodeX = startTmpX
+                    break
+                if str[i] != ',': startTmpX+=1
+
+        if goalNodeY == 0:
+            for i in range(strRowSize-1):
+                if str[i] == 'E':
+                    goalNodeX = goalTmpX
+                    break
+                goalTmpX+=1
+        else:
+            for i in range(goalNodeY*(strRowSize+1), goalNodeY*strRowSize + (strRowSize)):
+                k = str[i]
+                if str[i] == 'E':
+                    goalNodeX = goalTmpX
+                    break
+                if str[i] != ',': goalTmpX+=1
+
+        self.startNode = ['S', startNodeY, startNodeX]
+        self.goalNode = ['E', goalNodeY, goalNodeX]
+
+        # indxInColumn = [startIndex - (columnSize - 1), goalIndex - (columnSize - 1)]
+        # for e in range(1):
+        #     if indxInColumn[e] < 0:
+        #         indxInColumn[e] = 0
+        # startIndex = indxInColumn[0]
+        # goalIndex = indxInColumn[1]
+        #
+        # i = 0
+        # # startNode
+        # startNodeY =int( startIndex / rowSize)
+        #
+        # i += startNodeY * rowSize
+        # if startNodeY == 0:
+        #     for c in range(i,rowSize-1):
+        #         if str[c] == 'S':
+        #             startNodeX = c
+        #             break
+        # elif startNodeY == columnSize-1:
+        #     c=0
+        #     for g in range(i,i+rowSize-1):
+        #         tmp = str[g]
+        #         if str[g] == 'S':
+        #             startNodeX = c - (int(rowSize - (rowSize / 2)))
+        #             break
+        #         c+=1
+        #
+        # else:
+        #     if str[i] == 'S':
+        #         startNodeX = i
+        #     elif str[i+(rowSize)] == 'S':
+        #         startNodeX = int(rowSize - (rowSize/2))
+        # # startNodeX = startIndex - i
+        # # startNodeX = startIndex % rowSize - ((startIndex % rowSize) / 2)
+        #
+        # # goalNode
+        # goalNodeX = goalIndex % rowSize - ((goalIndex % rowSize) / 2)
+        # goalNodeY = goalIndex / rowSize
+
+
+    def Heuristic(self, x, y):
+        return (abs(x-self.goalNode[2])+abs(y-self.goalNode[1]))
+
+    def PrintMaze(self, maze):
+        # print maze with edge costs
+        for y in range(len(maze)):
+            for x in range(len(maze[0])):
+                print("(", maze[y][x].edgeCost, ")", end = " ")
+
+            print()
+
+            for x in range(len(maze[0])):
+                if maze[y][x].value == 'S'or maze[y][x].value == 'E':
+                    print (" ", maze[y][x].value, " ",end = " ")
+                else:
+                    print(" ", maze[y][x].id, " ", end=" ")
+
+            print()
+
 
 # endregion
 
@@ -328,10 +407,17 @@ class GeneticAlgorithm:
 #################################### Algorithms Main Functions #####################################
 # region Search_Algorithms_Main_Fn
 
+                                  #-----0----|---10---|----20---|----30--|---40----|----50---|---60----|
+def SearchAlgorithm_Main():       #012345678901234567890123456789013456789012345678901234567890123456789
+    # searchAlgo = SearchAlgorithms('.,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,S,#,E,.,#,.',
+    #                               [ 2, 15, 2, 100, 60, 35, 30,
+    #                                 3, 100, 2, 15, 60, 100, 30,
+    #                                 2, 100, 2, 2, 2, 40, 30,
+    #                                 2, 2, 100, 100, 3, 15, 30,
+    #                                 100,0, 100, 0, 2, 100, 30])
 
-def SearchAlgorithm_Main():
     searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.',
-                                  [0, 15, 2, 100, 60, 35, 30, 3
+                                  [ 0,15, 2,  100, 60, 35, 30, 3
                                           , 100, 2, 15, 60, 100, 30, 2
                                           , 100, 2, 2, 2, 40, 30, 2, 2
                                           , 100, 100, 3, 15, 30, 100, 2
