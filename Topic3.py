@@ -183,7 +183,7 @@ class SearchAlgorithms:
 
             prevNode = currentNode
         # print (self.nodes[0].hOfN)
-        self.PrintMaze(self.nodes)
+        # self.PrintMaze(self.nodes)
         return self.fullPath, self.path, self.totalCost
 
     # ------------Main class properties and functions  ---------------------
@@ -226,77 +226,77 @@ class SearchAlgorithms:
         self.startNode = ['S', startNodeY, startNodeX]
         self.goalNode = ['E', goalNodeY, goalNodeX]
 
-        # indxInColumn = [startIndex - (columnSize - 1), goalIndex - (columnSize - 1)]
-        # for e in range(1):
-        #     if indxInColumn[e] < 0:
-        #         indxInColumn[e] = 0
-        # startIndex = indxInColumn[0]
-        # goalIndex = indxInColumn[1]
-        #
-        # i = 0
-        # # startNode
-        # startNodeY =int( startIndex / rowSize)
-        #
-        # i += startNodeY * rowSize
-        # if startNodeY == 0:
-        #     for c in range(i,rowSize-1):
-        #         if str[c] == 'S':
-        #             startNodeX = c
-        #             break
-        # elif startNodeY == columnSize-1:
-        #     c=0
-        #     for g in range(i,i+rowSize-1):
-        #         tmp = str[g]
-        #         if str[g] == 'S':
-        #             startNodeX = c - (int(rowSize - (rowSize / 2)))
-        #             break
-        #         c+=1
-        #
-        # else:
-        #     if str[i] == 'S':
-        #         startNodeX = i
-        #     elif str[i+(rowSize)] == 'S':
-        #         startNodeX = int(rowSize - (rowSize/2))
-        # # startNodeX = startIndex - i
-        # # startNodeX = startIndex % rowSize - ((startIndex % rowSize) / 2)
-        #
-        # # goalNode
-        # goalNodeX = goalIndex % rowSize - ((goalIndex % rowSize) / 2)
-        # goalNodeY = goalIndex / rowSize
-
-
     def Heuristic(self, x, y):
         return (abs(x-self.goalNode[2])+abs(y-self.goalNode[1]))
 
-    def PrintMaze(self, maze):
-        # print maze with edge costs
-        for y in range(len(maze)):
-            for x in range(len(maze[0])):
-                print("(", maze[y][x].edgeCost, ")", end = " ")
-
-            print()
-
-            for x in range(len(maze[0])):
-                if maze[y][x].value == 'S'or maze[y][x].value == 'E':
-                    print (" ", maze[y][x].value, " ",end = " ")
-                else:
-                    print(" ", maze[y][x].id, " ", end=" ")
-
-            print()
+    # def PrintMaze(self, maze):
+    #     # print maze with edge costs
+    #     for y in range(len(maze)):
+    #         for x in range(len(maze[0])):
+    #             print("(", maze[y][x].edgeCost, ")", end = " ")
+    #
+    #         print()
+    #
+    #         for x in range(len(maze[0])):
+    #             if maze[y][x].value == 'S'or maze[y][x].value == 'E':
+    #                 print (" ", maze[y][x].value, " ",end = " ")
+    #             else:
+    #                 print(" ", maze[y][x].id, " ", end=" ")
+    #
+    #         print()
 
 
 # endregion
 
 # region KNN
 class KNN_Algorithm:
+
     def __init__(self, K):
         self.K = K
 
     def euclidean_distance(self, p1, p2):
-        pass
+        sum =0
+        for i in range(len(p1)-1):
+            sum += (p1[i] - p2[i])**2
+        return sqrt(sum)
 
     def KNN(self, X_train, X_test, Y_train, Y_test):
-        pass
+        yPred =[]
+        for p1 in X_test:
+            destencesList = []
+            neighbours = []
+            classesOfNeighbours = {0:0, 1:0}
+            #1- Calculating euclidean distance
+            for p2 in  range(len(X_train)):
+                destencesList.append([p2,self.euclidean_distance(p1,X_train[p2])])
+            destencesList.sort(key= lambda p: p[1])
+            # print(destencesList)
+            for i in range(self.K):
+                pointIndex = destencesList[i][0]
+                neighbours.append([pointIndex, Y_train[pointIndex]])
+            # print(neighbours)
+
+            # #2- Predection
+            # print("\n", p1, "-----------")
+            # for i in range(self.K):
+            #     classesOfNeighbours[neighbours[i][1]] += 1
+            #     print(neighbours[i][1], end=" ")
+            #     print(classesOfNeighbours, end="\n")
+            # yPred.append(max(set(classesOfNeighbours), key= classesOfNeighbours.get))
+
+            #2- Predection
+            for i in range(self.K):
+                if  neighbours[i][1] not in classesOfNeighbours:
+                    classesOfNeighbours.update({neighbours[i][1]: 0})
+                classesOfNeighbours[neighbours[i][1]] += 1
+            yPred.append(max(set(classesOfNeighbours), key= classesOfNeighbours.get))
+
+            #3- calculating accuracy
+            for i in range(len(yPred)):
+                c = 0
+                if yPred[i] == Y_test[i]:
+                    c+=1
+            return c*100/len(Y_test)
 
 # endregion KNN
 
@@ -496,5 +496,5 @@ def GeneticAlgorithm_Main():
 ######################## MAIN ###########################33
 if __name__ == '__main__':
     SearchAlgorithm_Main()
-    # KNN_Main()
+    KNN_Main()
     # GeneticAlgorithm_Main()
