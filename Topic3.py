@@ -296,7 +296,7 @@ class KNN_Algorithm:
                 c = 0
                 if yPred[i] == Y_test[i]:
                     c+=1
-            return c*100/len(Y_test)
+            return c*100/len(Y_test)*100
 
 # endregion KNN
 
@@ -307,13 +307,14 @@ class GeneticAlgorithm:
     DNA_SIZE = len(Cities)
     POP_SIZE = 20
     GENERATIONS = 5000
-
+    Pc = 0.9
+    Pm = 0.01
     """
     - Chooses a random element from items, where items is a list of tuples in
-       the form (item, weight).
+       the form (item, weight (cumulative fitness)).
     - weight determines the probability of choosing its respective item. 
      """
-
+    #Roulate Wheel (chooses based on cumulative fitness)
     def weighted_choice(self, items):
         weight_total = sum((item[1] for item in items))
         n = r.uniform(0, weight_total)
@@ -328,7 +329,7 @@ class GeneticAlgorithm:
        letters, and digits). All characters returned will be nicely printable. 
     """
 
-    def random_char():
+    def random_char(self):
         return chr(int(r.randrange(32, 126, 1)))
 
     """ 
@@ -384,7 +385,14 @@ class GeneticAlgorithm:
 
     # complete fitness function
     def fitness(self, dna):
-       pass
+        sum = 0
+        for i in range(len(dna)):
+            if i == len(dna)-1:
+                sum += self.cost(dna[i], dna[0])
+                break
+            sum += self.cost(dna[i], dna[i+1])
+        return sum
+
     """ 
        For each gene in the DNA, there is a 1/mutation_chance chance that it will be 
        switched out with a random character. This ensures diversity in the 
@@ -392,8 +400,14 @@ class GeneticAlgorithm:
        """
 
     def mutate(self, dna, random1, random2):
-       pass
-
+       if random1 <= self.Pm:
+           index = int(random2*len(dna))
+           mutateList = dna[index:]
+           tmp = dna[:index]
+           random.shuffle(mutateList)
+           tmp+=mutateList
+           return tmp
+       return dna
        """ 
        Slices both dna1 and dna2 into two parts at a random index within their 
        length and merges them. Both keep their initial sublist up to the crossover 
@@ -401,8 +415,28 @@ class GeneticAlgorithm:
        """
 
     def crossover(self, dna1, dna2, random1, random2):
-       pass
+       if random1 <= self.Pc:
+            index = int(random2*len(dna1))
+            b1 = dna1[index:]
+            b2 = dna2[index:]
+            NewDNA1 = dna1[:index]
+            NewDNA2 = dna2[:index]
+            for i in range(len(b1)):
+                if b2[i] not in NewDNA1:
+                    NewDNA1.append(b2[i])
+                if b1[i] not in NewDNA2:
+                    NewDNA2.append(b1[i])
+            if len(NewDNA1) is not len(dna1):
+                for i in b1:
+                    if i not in NewDNA1:
+                        NewDNA1.append(i)
+            if len(NewDNA2) is not len(dna2):
+                for i in b2:
+                    if i not in NewDNA2:
+                        NewDNA2.append(i)
 
+            return NewDNA1, NewDNA2
+       return dna1, dna2
 # endregion
 #################################### Algorithms Main Functions #####################################
 # region Search_Algorithms_Main_Fn
@@ -497,4 +531,4 @@ def GeneticAlgorithm_Main():
 if __name__ == '__main__':
     SearchAlgorithm_Main()
     KNN_Main()
-    # GeneticAlgorithm_Main()
+    GeneticAlgorithm_Main()
