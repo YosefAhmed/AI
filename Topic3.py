@@ -73,47 +73,39 @@ class Node:
 
 
 class SearchAlgorithms:
-    ''' * DON'T change Class, Function or Parameters Names and Order
-        * You can add ANY extra functions,
-          classes you need as long as the main
-          structure is left as is '''
-    edgeCosts = None #2D array represents the edge costs
-    nodes = [] #array of nodes
+
+    nodes = [] #2D array of nodes
     startNode = None #[value, X, Y]
     goalNode = None #[value, X, Y]
     open = []
     close = []
-   #------------Main class properties and functions  ---------------------
     path = []  # Represents the correct path from start node to the goal node.
     fullPath = []  # Represents all visited nodes from the start node to the goal node.
     totalCost = None
 
     def __init__(self, mazeStr,edgeCost = None):
-        column = mazeStr.split(' ')
-        for i in range(len(column)):
+        Rows = mazeStr.split(' ')
+        for i in range(len(Rows)):
             self.nodes.append([])
-            row = column[i].split(',')
-        # -- finding startNode and endNode --
+            _row = Rows[i].split(',')
+        #1 -- finding startNode and endNode --
             if self.startNode is None:
-                self.GetStartAndGoal(mazeStr.index('S'),mazeStr.index('E'), len(column), len(column[0]), mazeStr)
-        # ------------------------------------------------------------------------
-            for j in range(len(row)):
-
-                self.nodes[i].append(Node(row[j], i*len(row)+j, None, None, None, None,
+                self.GetStartAndGoal(mazeStr.index('S'),mazeStr.index('E'), len(Rows), mazeStr)
+        #2 -- represent the maze as 2D array of nodes --
+            for j in range(len(_row)):
+                self.nodes[i].append(Node(_row[j], i*len(_row)+j, None, None, None, None,
                                  -1, -1, 0, self.Heuristic(j,i), sys.maxsize ))
-
                 #edge cost
-                self.nodes[i][j].edgeCost = edgeCost[i*len(row)+j]
+                self.nodes[i][j].edgeCost = edgeCost[i*len(_row)+j]
                 #left
                 if j is not 0:
                    self.nodes[i][j].left = [i, j-1]
                 #right
-                if j is not len(row)-1:
+                if j is not len(_row)-1:
                     self.nodes[i][j].right = [i, j+1]
                 #up
                 if i is not 0:
                     self.nodes[i][j].up = [i-1, j]
-
                     #down
                     self.nodes[i-1][j].down = [i,j]
 
@@ -122,24 +114,23 @@ class SearchAlgorithms:
         self.nodes[self.startNode[1]][self.startNode[2]].heuristicFn = \
             self.nodes[self.startNode[1]][self.startNode[2]].hOfN + self.nodes[self.startNode[1]][self.startNode[2]].gOfN
 
-        #append start node to Open list
+        #1- append start node to Open list
         self.open.append(self.nodes[self.startNode[1]][self.startNode[2]])
 
         prevNode = None
         while len(self.open) != 0:
-
-        # -- sorting the Open list ordered by heuristicFn --
+        #2 -- sorting the Open list ordered by heuristicFn --
             self.open.sort(key= lambda node: node.heuristicFn)
 
-        # -- pop the least order node to get its neighbours and append it to Close list --
+        #3 -- pop the least order node to get its neighbours and append it to Close list --
             currentNode = self.open.pop(0)
             # ==handel the case of trying a wrong path (if the selected path was blocked)==
             if prevNode is not None and currentNode.previousNode is not prevNode.id:
                 while currentNode.previousNode is not prevNode.id:
                     prevNode = self.close.pop()
-            #==============================================================================
 
-        # -- update attributes of neighbours of the current node ( update parent, gOfN, FoFN), and append them to Open list --
+        #4 -- update attributes of neighbours of the current node
+        #    ( update parent, gOfN, FoFN), and append them to Open list --
             if currentNode.up != None:
                 up = self.nodes[currentNode.up[0]][currentNode.up[1]]
                 if(currentNode.heuristicFn < up.heuristicFn):
@@ -170,7 +161,7 @@ class SearchAlgorithms:
                     self.open.append(right)
         # ---------------------------------------------------------------------------------------------------------------------------------
 
-        # -- append the current node to Close list and append its id to the fullPath --
+        #5 -- append the current node to Close list and append its id to the fullPath --
             self.close.append(currentNode)
             self.fullPath.append(currentNode.id)
 
@@ -182,19 +173,20 @@ class SearchAlgorithms:
                 break
 
             prevNode = currentNode
-        # print (self.nodes[0].hOfN)
-        # self.PrintMaze(self.nodes)
         return self.fullPath, self.path, self.totalCost
 
-    # ------------Main class properties and functions  ---------------------
+    '''
+        this function defines the index of the Start node, and Goal node in 
+        the 2D array of nodes
+    '''
+    def GetStartAndGoal(self, startIndex, goalIndex, strRowSize, str):
 
-    def GetStartAndGoal(self, startIndex, goalIndex, columnSize, strRowSize, str):
+        startTmpX = goalTmpX = startNodeX = goalNodeX = 0
 
-        startTmpX = startTmpY = goalTmpX = goalTmpY = startNodeX = startNodeY = goalNodeX = goalNodeY = 0
-
+        #Row number
         startNodeY = int(startIndex / (strRowSize+1))
         goalNodeY = int(goalIndex / (strRowSize+1))
-
+        #if in 1st Row
         if startNodeY == 0:
             for i in range(strRowSize-1):
                 if str[i] == 'S':
@@ -203,7 +195,7 @@ class SearchAlgorithms:
                 startTmpX+=1
         else:
             for i in range(startNodeY*(strRowSize+1), startNodeY*strRowSize + (strRowSize+1)):
-                k = str[i]
+                # k = str[i]
                 if str[i] == 'S':
                     startNodeX = startTmpX
                     break
@@ -217,7 +209,7 @@ class SearchAlgorithms:
                 goalTmpX+=1
         else:
             for i in range(goalNodeY*(strRowSize+1), goalNodeY*strRowSize + (strRowSize)):
-                k = str[i]
+                # k = str[i]
                 if str[i] == 'E':
                     goalNodeX = goalTmpX
                     break
@@ -226,25 +218,12 @@ class SearchAlgorithms:
         self.startNode = ['S', startNodeY, startNodeX]
         self.goalNode = ['E', goalNodeY, goalNodeX]
 
+    """
+        this function calculates the h(n) of a node 
+        given its index in the 2D array of nodes
+    """
     def Heuristic(self, x, y):
-        return (abs(x-self.goalNode[2])+abs(y-self.goalNode[1]))
-
-    # def PrintMaze(self, maze):
-    #     # print maze with edge costs
-    #     for y in range(len(maze)):
-    #         for x in range(len(maze[0])):
-    #             print("(", maze[y][x].edgeCost, ")", end = " ")
-    #
-    #         print()
-    #
-    #         for x in range(len(maze[0])):
-    #             if maze[y][x].value == 'S'or maze[y][x].value == 'E':
-    #                 print (" ", maze[y][x].value, " ",end = " ")
-    #             else:
-    #                 print(" ", maze[y][x].id, " ", end=" ")
-    #
-    #         print()
-
+        return abs(x - self.goalNode[2]) + abs(y - self.goalNode[1])
 
 # endregion
 
@@ -265,33 +244,34 @@ class KNN_Algorithm:
         for p1 in X_test:
             destencesList = []
             neighbours = []
-            classesOfNeighbours = {0:0, 1:0}
-            #1- Calculating euclidean distance
+            classesOfNeighbours = {0:0, 1:0} #number of each class in test points
+        #1- Calculating euclidean distance
             for p2 in  range(len(X_train)):
                 destencesList.append([p2,self.euclidean_distance(p1,X_train[p2])])
+        #2- sorting distances
+            #each element in destencesList contains [destence, p1,p2]
             destencesList.sort(key= lambda p: p[1])
-            # print(destencesList)
+        #3- get the first K elements
             for i in range(self.K):
                 pointIndex = destencesList[i][0]
                 neighbours.append([pointIndex, Y_train[pointIndex]])
-            # print(neighbours)
-
-            # #2- Predection
-            # print("\n", p1, "-----------")
-            # for i in range(self.K):
-            #     classesOfNeighbours[neighbours[i][1]] += 1
-            #     print(neighbours[i][1], end=" ")
-            #     print(classesOfNeighbours, end="\n")
-            # yPred.append(max(set(classesOfNeighbours), key= classesOfNeighbours.get))
-
-            #2- Predection
+        #4- Predection
+            # -- for integer classes only --
             for i in range(self.K):
-                if  neighbours[i][1] not in classesOfNeighbours:
-                    classesOfNeighbours.update({neighbours[i][1]: 0})
+                #increament number of each class of each
+                #neighbour (classes of nieghbours[Y_train]
                 classesOfNeighbours[neighbours[i][1]] += 1
+            # ------------------------------
             yPred.append(max(set(classesOfNeighbours), key= classesOfNeighbours.get))
 
-            #3- calculating accuracy
+            # -- for multiple classes --
+            # for i in range(self.K):
+            #     if  neighbours[i][1] not in classesOfNeighbours:
+            #         classesOfNeighbours.update({neighbours[i][1]: 0})
+            #     classesOfNeighbours[neighbours[i][1]] += 1
+            # yPred.append(max(set(classesOfNeighbours), key= classesOfNeighbours.get))
+
+        #5- calculating accuracy
             for i in range(len(yPred)):
                 c = 0
                 if yPred[i] == Y_test[i]:
@@ -299,7 +279,6 @@ class KNN_Algorithm:
             return c*100/len(Y_test)*100
 
 # endregion KNN
-
 
 # region GeneticAlgorithm
 class GeneticAlgorithm:
@@ -309,6 +288,7 @@ class GeneticAlgorithm:
     GENERATIONS = 5000
     Pc = 0.9
     Pm = 0.01
+
     """
     - Chooses a random element from items, where items is a list of tuples in
        the form (item, weight (cumulative fitness)).
@@ -383,7 +363,10 @@ class GeneticAlgorithm:
         else:
             return 15
 
-    # complete fitness function
+    """
+    calculate the fitness value of a given DNA (individual)
+    using the function Cost()
+    """
     def fitness(self, dna):
         sum = 0
         for i in range(len(dna)):
@@ -397,7 +380,7 @@ class GeneticAlgorithm:
        For each gene in the DNA, there is a 1/mutation_chance chance that it will be 
        switched out with a random character. This ensures diversity in the 
        population, and ensures that is difficult to get stuck in local minima. 
-       """
+    """
 
     def mutate(self, dna, random1, random2):
        if random1 <= self.Pm:
@@ -408,12 +391,18 @@ class GeneticAlgorithm:
            tmp+=mutateList
            return tmp
        return dna
+
+
        """ 
        Slices both dna1 and dna2 into two parts at a random index within their 
        length and merges them. Both keep their initial sublist up to the crossover 
        index, but their ends are swapped. 
        """
 
+    """
+    apply the crossover operation on a pair of DNAs by splitting 
+    each of them at a random index and swapping the splited parts 
+    """
     def crossover(self, dna1, dna2, random1, random2):
        if random1 <= self.Pc:
             index = int(random2*len(dna1))
@@ -437,12 +426,12 @@ class GeneticAlgorithm:
 
             return NewDNA1, NewDNA2
        return dna1, dna2
+
 # endregion
 #################################### Algorithms Main Functions #####################################
 # region Search_Algorithms_Main_Fn
 
-                                  #-----0----|---10---|----20---|----30--|---40----|----50---|---60----|
-def SearchAlgorithm_Main():       #012345678901234567890123456789013456789012345678901234567890123456789
+def SearchAlgorithm_Main():
     # searchAlgo = SearchAlgorithms('.,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,S,#,E,.,#,.',
     #                               [ 2, 15, 2, 100, 60, 35, 30,
     #                                 3, 100, 2, 15, 60, 100, 30,
@@ -451,11 +440,12 @@ def SearchAlgorithm_Main():       #012345678901234567890123456789013456789012345
     #                                 100,0, 100, 0, 2, 100, 30])
 
     searchAlgo = SearchAlgorithms('S,.,.,#,.,.,. .,#,.,.,.,#,. .,#,.,.,.,.,. .,.,#,#,.,.,. #,.,#,E,.,#,.',
-                                  [ 0,15, 2,  100, 60, 35, 30, 3
-                                          , 100, 2, 15, 60, 100, 30, 2
-                                          , 100, 2, 2, 2, 40, 30, 2, 2
-                                          , 100, 100, 3, 15, 30, 100, 2
-                                          , 100, 0, 2, 100, 30])
+                                  [ 0, 15, 2, 100, 60, 35,
+                                    30, 3, 100, 2, 15, 60,
+                                    100, 30, 2, 100, 2, 2,
+                                    2, 40, 30, 2, 2, 100,
+                                    100,3, 15, 30, 100,2,
+                                    100, 0, 2, 100, 30])
     fullPath, path, TotalCost = searchAlgo.AstarManhattanHeuristic()
     print('\n**ASTAR with Manhattan Heuristic ** \nFull Path:' + str(fullPath) + '\nPath is: ' + str(path)
           + '\nTotal Cost: ' + str(TotalCost) + '\n\n')
@@ -496,6 +486,7 @@ def KNN_Main():
 def GeneticAlgorithm_Main():
     genetic = GeneticAlgorithm();
     population = genetic.random_population()
+    print("\n")
     for generation in range(genetic.GENERATIONS):
         # print("Generation %s... Random sample: '%s'" % (generation, population[0]))
         weighted_population = []
